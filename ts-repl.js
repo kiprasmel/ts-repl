@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-const { spawnSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { spawnSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 const { Project, SyntaxKind, Node } = require("ts-morph");
 
 function tsReplCLI(argv = process.argv.slice(2)) {
 	if (argv.length < 1) {
-		console.error('Please provide a TypeScript file path.');
+		console.error("Please provide a TypeScript file path.");
 		process.exit(1);
 	}
 
@@ -30,12 +30,12 @@ function createTempFile(filePath) {
 	// Use ts-morph to analyze the file
 	const project = new Project();
 	const sourceFile = project.addSourceFileAtPath(filePath);
-	
+
 	// Get the original file content
 	const originalContent = sourceFile.getFullText();
-	
+
 	const { newExportStatements, allTopLevelSymbols } = getExportDeclarations(sourceFile);
-	
+
 	const tempFileContent = `\
 ${originalContent}
 
@@ -51,7 +51,7 @@ import * as __ts_repl__path from 'path';
 import * as __ts_repl__os from 'os';
 
 // Capture all top-level symbols
-const __ts_repl__allSymbols = [${allTopLevelSymbols.map(s => `'${s}'`).join(', ')}];
+const __ts_repl__allSymbols = [${allTopLevelSymbols.map((s) => `'${s}'`).join(", ")}];
 
 function __ts_repl__listAvailableSymbols(): void {
 	console.log('available top-level symbols:');
@@ -111,7 +111,8 @@ __ts_repl__createReplServer(__ts_repl__context, __ts_repl__listAvailableSymbols)
 
 function getExportDeclarations(sourceFile) {
 	// Find all top-level functions and variables
-	const topLevelSymbols = sourceFile.getChildrenOfKind(SyntaxKind.VariableStatement)
+	const topLevelSymbols = sourceFile
+		.getChildrenOfKind(SyntaxKind.VariableStatement)
 		.concat(sourceFile.getChildrenOfKind(SyntaxKind.FunctionDeclaration));
 
 	// Arrays to store results
@@ -119,12 +120,13 @@ function getExportDeclarations(sourceFile) {
 	const allTopLevelSymbols = new Set();
 
 	// Get all existing exports
-	const existingExports = new Set(sourceFile.getExportDeclarations()
-		.flatMap(exp => exp.getNamedExports().map(ne => ne.getName())));
+	const existingExports = new Set(
+		sourceFile.getExportDeclarations().flatMap((exp) => exp.getNamedExports().map((ne) => ne.getName()))
+	);
 
 	// Process import declarations
 	sourceFile.getImportDeclarations().forEach((importDecl) => {
-		importDecl.getNamedImports().forEach(namedImport => {
+		importDecl.getNamedImports().forEach((namedImport) => {
 			const name = namedImport.getName();
 			if (!existingExports.has(name)) {
 				newExportStatements.push(`export { ${name} };`);
@@ -136,14 +138,12 @@ function getExportDeclarations(sourceFile) {
 	// Iterate through the top-level symbols
 	topLevelSymbols.forEach((symbol) => {
 		if (Node.isVariableStatement(symbol) || Node.isFunctionDeclaration(symbol)) {
-			const declaration = Node.isVariableStatement(symbol)
-				? symbol.getDeclarationList().getDeclarations()[0]
-				: symbol;
+			const declaration = Node.isVariableStatement(symbol) ? symbol.getDeclarationList().getDeclarations()[0] : symbol;
 			const name = declaration.getName();
 
 			if (name) {
 				allTopLevelSymbols.add(name);
-				
+
 				if (!symbol.hasModifier(SyntaxKind.ExportKeyword)) {
 					newExportStatements.push(`export { ${name} };`);
 				}
@@ -152,32 +152,37 @@ function getExportDeclarations(sourceFile) {
 	});
 
 	return {
-		newExportStatements, 
-		allTopLevelSymbols: Array.from(allTopLevelSymbols)
+		newExportStatements,
+		allTopLevelSymbols: Array.from(allTopLevelSymbols),
 	};
 }
-
 
 function runTsNode(tempFilePath) {
 	console.log("compiling...");
 	console.log(tempFilePath);
 
-	const result = spawnSync('ts-node', [
-		'--compilerOptions', `'{"strict":true,"esModuleInterop":true,"allowJs":true,"noUnusedLocals":true,"noUnusedParameters":true}'`,
-		'-r', 'tsconfig-paths/register',
-		tempFilePath
-	], {
-		stdio: 'inherit',
-		shell: true,
-		env: {
-			...process.env,
-			REPL: 1,
-			TS_REPL: 1,
+	const result = spawnSync(
+		"ts-node",
+		[
+			"--compilerOptions",
+			`'{"strict":true,"esModuleInterop":true,"allowJs":true,"noUnusedLocals":true,"noUnusedParameters":true}'`,
+			"-r",
+			"tsconfig-paths/register",
+			tempFilePath,
+		],
+		{
+			stdio: "inherit",
+			shell: true,
+			env: {
+				...process.env,
+				REPL: 1,
+				TS_REPL: 1,
+			},
 		}
-	});
+	);
 
 	if (result.error) {
-		console.error('Failed to start ts-node:', result.error);
+		console.error("Failed to start ts-node:", result.error);
 		process.exit(1);
 	}
 }
