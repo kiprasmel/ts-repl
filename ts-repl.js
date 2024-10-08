@@ -39,14 +39,11 @@ import * as vm from 'vm';
 import * as path from 'path';
 import * as os from 'os';
 
-const symbols = [
-	...Object.keys(global),
-	...Object.keys(_fileExports)
-];
+const fileSymbols = Object.keys(_fileExports);
 
 function listAvailableSymbols(): void {
-	console.log('symbols:');
-	console.log(symbols.join(', '));
+	console.log('File symbols:');
+	console.log(fileSymbols.join(', '));
 }
 
 function createReplServer(fileExports: any, listSymbols: () => void): void {
