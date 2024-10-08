@@ -1,6 +1,10 @@
 # ts-repl
 
-a simple typescript repl, similar in spirit to haskell's `ghci`.
+a simple typescript REPL, similar in spirit to haskell's `ghci`.
+
+## features
+
+- given a file, enters a REPL with *all* top-level symbols available directly - imports, local & exported symbols (functions, variables).
 
 ## install
 
