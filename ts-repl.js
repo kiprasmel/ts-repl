@@ -51,40 +51,41 @@ function createTempFile(filePath) {
 	// Get the modified source code
 	const modifiedCode = sourceFile.getFullText();
 	
-	const tempFileContent = `
-import * as repl from 'repl';
-import * as vm from 'vm';
-import * as path from 'path';
-import * as os from 'os';
-
+	const tempFileContent = `\
 // Modified source code with all symbols exported
 ${modifiedCode}
 
-// Capture all symbols
-const allSymbols = [${symbols.map(s => `'${s}'`).join(', ')}];
+import * as __ts_repl__repl from 'repl';
+import * as __ts_repl__vm from 'vm';
+import * as __ts_repl__path from 'path';
+import * as __ts_repl__os from 'os';
 
-function listAvailableSymbols(): void {
-	console.log('Available symbols:');
-	console.log(allSymbols.join(', '));
+
+// Capture all symbols
+const __ts_repl__allSymbols = [${symbols.map(s => `'${s}'`).join(', ')}];
+
+function __ts_repl__listAvailableSymbols(): void {
+	console.log('symbols:');
+	console.log(__ts_repl__allSymbols.join(', '));
 }
 
-function createReplServer(context: vm.Context, listSymbols: () => void): void {
-	const historyFile = process.env.TS_REPL_HISTFILE || path.join(os.homedir(), '.ts_repl_history');
+function __ts_repl__createReplServer(context: __ts_repl__vm.Context, listSymbols: () => void): void {
+	const historyFile = process.env.TS_REPL_HISTFILE || __ts_repl__path.join(__ts_repl__os.homedir(), '.ts_repl_history');
 
 	// https://nodejs.org/api/repl.html
-	const r = repl.start({
+	const r = __ts_repl__repl.start({
 		prompt: '> ',
 		useGlobal: false,
 		preview: true,
-		eval: (cmd: string, context: vm.Context, _filename: string, callback: (err: Error | null, result: any) => void) => {
+		eval: (cmd: string, context: __ts_repl__vm.Context, _filename: string, callback: (err: Error | null, result: any) => void) => {
 			try {
-				const result = vm.runInContext(cmd, context);
+				const result =  __ts_repl__vm.runInContext(cmd, context);
 				callback(null, result);
 			} catch (e) {
 				callback(e as Error, null);
 			}
 		}
-	});
+	} as any); // TODO TS
 
 	// Add all symbols to REPL context
 	Object.assign(r.context, context);
@@ -101,16 +102,16 @@ function createReplServer(context: vm.Context, listSymbols: () => void): void {
 		}
 		r.displayPrompt();
 
-		listAvailableSymbols();
+		__ts_repl__listAvailableSymbols();
 		r.displayPrompt();
 	});
 }
 
 // Create a context with all symbols
-const context = vm.createContext({...global, ...exports});
+const __ts_repl__context = __ts_repl__vm.createContext({...global, ...exports});
 
 // Call createReplServer with the context
-createReplServer(context, listAvailableSymbols);
+__ts_repl__createReplServer(__ts_repl__context, __ts_repl__listAvailableSymbols);
 `;
 
 	fs.writeFileSync(tempFilePath, tempFileContent);
