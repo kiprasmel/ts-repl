@@ -6,6 +6,7 @@
 	"author": "Kipras Melnikovas <kipras@kipras.org> (http://kipras.org/)",
 	"license": "UNLICENSED",
 	"dependencies": {
-		"ts-morph": "24.0.0"
+		"ts-morph": "24.0.0",
+		"tsconfig-paths": "4.2.0"
 	}
 }
