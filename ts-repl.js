@@ -113,7 +113,8 @@ function getExportDeclarations(sourceFile) {
 	// Find all top-level functions and variables
 	const topLevelSymbols = sourceFile
 		.getChildrenOfKind(SyntaxKind.VariableStatement)
-		.concat(sourceFile.getChildrenOfKind(SyntaxKind.FunctionDeclaration));
+		.concat(sourceFile.getChildrenOfKind(SyntaxKind.FunctionDeclaration))
+		.concat(sourceFile.getChildrenOfKind(SyntaxKind.ClassDeclaration));
 
 	// Arrays to store results
 	const newExportStatements = [];
@@ -137,7 +138,7 @@ function getExportDeclarations(sourceFile) {
 
 	// Iterate through the top-level symbols
 	topLevelSymbols.forEach((symbol) => {
-		if (Node.isVariableStatement(symbol) || Node.isFunctionDeclaration(symbol)) {
+		if (Node.isVariableStatement(symbol) || Node.isFunctionDeclaration(symbol) || Node.isClassDeclaration(symbol)) {
 			const declaration = Node.isVariableStatement(symbol) ? symbol.getDeclarationList().getDeclarations()[0] : symbol;
 			const name = declaration.getName();
 
