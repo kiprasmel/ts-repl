@@ -49,6 +49,7 @@ import * as __ts_repl__repl from 'repl';
 import * as __ts_repl__vm from 'vm';
 import * as __ts_repl__path from 'path';
 import * as __ts_repl__os from 'os';
+import * as __ts_repl__cp from 'child_process';
 
 // Capture all top-level symbols
 const __ts_repl__allSymbols = [${allTopLevelSymbols.map((s) => `'${s}'`).join(", ")}];
@@ -94,6 +95,19 @@ function __ts_repl__createReplServer(context: __ts_repl__vm.Context, listSymbols
 		listSymbols();
 		r.displayPrompt();
 	});
+
+	r.defineCommand("r", {
+		help: "reload the REPL",
+		action: () => {
+			r.close();
+			const cmd = \`${process.argv[0]}\`;
+			const args = [${process.argv.slice(1).map(x => `"${x}"`).join(", ")}];
+			__ts_repl__cp.spawn(cmd, args, {
+				stdio: "inherit",
+				shell: false,
+			});
+		}
+	})
 }
 
 // Create a context with all symbols
