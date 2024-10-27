@@ -7,20 +7,44 @@ const { Project, SyntaxKind, Node } = require("ts-morph");
 
 function tsReplCLI(argv = process.argv.slice(2)) {
 	if (argv.length < 1) {
-		console.error("Please provide a TypeScript file path.");
+		console.error("at least 1 arg of the filepath is required.");
 		process.exit(1);
 	}
 
-	const filePath = path.resolve(argv[0]);
+	let filepath;
+	let opts = {};
 
-	if (!fs.existsSync(filePath)) {
-		console.error(`File not found: ${filePath}`);
+	while (argv.length) {
+		const arg = argv.shift();
+
+		switch (arg) {
+			case "-f":
+			case "--force":
+			case "--nocheck":
+			case "--no-check": {
+				opts.force = true;
+				break;
+			}
+			default: {
+				if (!filepath) filepath = arg;
+				else errExit(`error: unknown arg "${arg}".`);
+			}
+		}
+	}
+
+	if (!fs.existsSync(filepath)) {
+		console.error(`File not found: ${filepath}`);
 		process.exit(1);
 	}
 
-	const tempFilePath = createTempFile(filePath);
+	const tempFilePath = createTempFile(filepath);
 
-	runTsNode(tempFilePath);
+	runTsNode(tempFilePath, opts);
+}
+
+function errExit(msg, code = 1) {
+	process.stderr.write(msg);
+	process.exit(code);
 }
 
 function createTempFile(filePath) {
@@ -172,7 +196,7 @@ function getExportDeclarations(sourceFile) {
 	};
 }
 
-function runTsNode(tempFilePath) {
+function runTsNode(tempFilePath, opts) {
 	console.log("compiling...");
 	console.log(tempFilePath);
 
@@ -183,6 +207,7 @@ function runTsNode(tempFilePath) {
 			`'{"strict":true,"esModuleInterop":true,"allowJs":true,"noUnusedLocals":true,"noUnusedParameters":true}'`,
 			"-r",
 			"tsconfig-paths/register",
+			opts.force ? "--transpileOnly" : "",
 			tempFilePath,
 		],
 		{
